@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/MadridMAC/gator/internal/config"
+	"github.com/MadridMAC/gator/internal/database"
 )
 
 type state struct {
 	pointer *config.Config
+	db      *database.Queries
 }
 
 type command struct {

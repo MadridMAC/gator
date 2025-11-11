@@ -59,3 +59,11 @@ func handlerRegister(s *state, cmd command) error {
 
 	return nil
 }
+
+func handlerReset(s *state, cmd command) error {
+	del_users := s.db.DeleteUsers(context.Background())
+	if del_users != nil {
+		log.Fatalf("an error occurred while resetting the users table: %v\n", del_users)
+	}
+	return nil
+}

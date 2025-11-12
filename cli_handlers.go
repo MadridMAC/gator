@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/MadridMAC/gator/internal/database"
@@ -55,7 +56,7 @@ func handlerRegister(s *state, cmd command) error {
 
 	fmt.Printf("user %s successfully registered\n", name_arg)
 	newUser, _ := s.db.GetUser(context.Background(), name_arg)
-	fmt.Printf("debug info: %v", newUser)
+	fmt.Printf("debug info: %v\n", newUser)
 
 	return nil
 }
@@ -64,6 +65,21 @@ func handlerReset(s *state, cmd command) error {
 	del_users := s.db.DeleteUsers(context.Background())
 	if del_users != nil {
 		log.Fatalf("an error occurred while resetting the users table: %v\n", del_users)
+	}
+	return nil
+}
+
+func handlerUsers(s *state, cmd command) error {
+	user_list, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		log.Fatalf("an error occurred while getting all users: %v\n", err)
+	}
+	for _, user := range user_list {
+		if strings.EqualFold(user, s.pointer.Current_user_name) {
+			fmt.Printf("* %s (current)\n", user)
+		} else {
+			fmt.Printf("* %s\n", user)
+		}
 	}
 	return nil
 }

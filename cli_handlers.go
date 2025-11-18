@@ -83,3 +83,13 @@ func handlerUsers(s *state, cmd command) error {
 	}
 	return nil
 }
+
+func handlerAgg(s *state, cmd command) error {
+	rss_feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		log.Fatalf("error retrieving RSS feed: %v", err)
+	}
+	cleaned_feed := feedFormatter(rss_feed)
+	fmt.Println(cleaned_feed)
+	return nil
+}

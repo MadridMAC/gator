@@ -131,3 +131,26 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Printf("successfully created new feed %s\nfeed fields: %v\n", new_feed.Name, cleaned_fields)
 	return nil
 }
+
+func handlerFeeds(s *state, cmd command) error {
+	// get all feeds (name, url, attached user_id)
+	all_feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		log.Fatalf("error fetching feeds: %v", err)
+	}
+
+	fmt.Println("List of Feeds:")
+	for _, feed := range all_feeds {
+		// feed_name := feed.Name
+		// feed_url := feed.Url
+
+		// fetch feed user's name via their user_id
+		feed_user, err := s.db.GetFeedUser(context.Background(), feed.UserID)
+		if err != nil {
+			log.Fatalf("error fetching feed user: %v", err)
+		}
+
+		fmt.Printf("* %s | %s | from user: %s\n", feed.Name, feed.Url, feed_user)
+	}
+	return nil
+}

@@ -37,8 +37,6 @@ func handlerRegister(s *state, cmd command) error {
 	name_arg := cmd.args[0]
 
 	_, err := s.db.GetUser(context.Background(), name_arg)
-	//fmt.Println(checkUser)
-	//fmt.Println(err)
 
 	if err != sql.ErrNoRows {
 		log.Fatalf("error: user with name %s already exists", name_arg)
@@ -91,5 +89,45 @@ func handlerAgg(s *state, cmd command) error {
 	}
 	cleaned_feed := feedFormatter(rss_feed)
 	fmt.Println(cleaned_feed)
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		log.Fatal("error: insufficient arguments; expecting name and url argument")
+	}
+	// getting name, url, and current user id for user_id
+	name_arg := cmd.args[0]
+	url_arg := cmd.args[1]
+	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
+	if err != nil {
+		log.Fatal("error fetching current user")
+	}
+
+	// building params in feedData to create new feed
+	feedData := database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Name:      name_arg,
+		Url:       url_arg,
+		UserID:    curr_user.ID,
+	}
+
+	// create new feed w/ feedData
+	new_feed, err := s.db.CreateFeed(context.Background(), feedData)
+	if err != nil {
+		log.Fatalf("error creating feed: %v", err)
+	}
+
+	// fetch feed fields and clean them
+	feed_fields, err := fetchFeed(context.Background(), new_feed.Url)
+	if err != nil {
+		log.Fatalf("error fetching feed: %v", err)
+	}
+	cleaned_fields := feedFormatter(feed_fields)
+
+	// success message + printing fields
+	fmt.Printf("successfully created new feed %s\nfeed fields: %v\n", new_feed.Name, cleaned_fields)
 	return nil
 }

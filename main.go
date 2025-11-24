@@ -37,6 +37,8 @@ func main() {
 	commandList.register("agg", handlerAgg)
 	commandList.register("addfeed", handlerAddFeed)
 	commandList.register("feeds", handlerFeeds)
+	commandList.register("follow", handlerFollow)
+	commandList.register("following", handlerFollowing)
 
 	curr_args := os.Args
 	if len(curr_args) < 2 {

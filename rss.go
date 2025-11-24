@@ -57,8 +57,9 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	if err := xml.Unmarshal(data, &output); err != nil {
 		log.Fatalf("error unmarshalling XML: %v", err)
 	}
+	cleaned_output := feedFormatter(output)
 
-	return output, nil
+	return cleaned_output, nil
 }
 
 func feedFormatter(feed *RSSFeed) *RSSFeed {

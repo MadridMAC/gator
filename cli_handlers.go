@@ -120,15 +120,27 @@ func handlerAddFeed(s *state, cmd command) error {
 		log.Fatalf("error creating feed: %v", err)
 	}
 
-	// fetch feed fields and clean them
+	// automatically follow new feed when created
+	feed_follow_params := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    curr_user.ID,
+		FeedID:    new_feed.ID,
+	}
+	_, feed_follow_err := s.db.CreateFeedFollow(context.Background(), feed_follow_params)
+	if feed_follow_err != nil {
+		log.Fatalf("error creating feed follow: %v", err)
+	}
+
+	// fetch feed fields
 	feed_fields, err := fetchFeed(context.Background(), new_feed.Url)
 	if err != nil {
 		log.Fatalf("error fetching feed: %v", err)
 	}
-	cleaned_fields := feedFormatter(feed_fields)
 
 	// success message + printing fields
-	fmt.Printf("successfully created new feed %s\nfeed fields: %v\n", new_feed.Name, cleaned_fields)
+	fmt.Printf("successfully created new feed %s\nfeed fields: %v\n", new_feed.Name, feed_fields)
 	return nil
 }
 
@@ -151,6 +163,53 @@ func handlerFeeds(s *state, cmd command) error {
 		}
 
 		fmt.Printf("* %s | %s | from user: %s\n", feed.Name, feed.Url, feed_user)
+	}
+	return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		log.Fatal("error: expecting url argument")
+	}
+	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
+	if err != nil {
+		log.Fatal("error fetching current user")
+	}
+	feed_from_url, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
+	if err != nil {
+		log.Fatal("error fetching feed from provided URL")
+	}
+
+	feed_follow_params := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    curr_user.ID,
+		FeedID:    feed_from_url.ID,
+	}
+	created_feed, err := s.db.CreateFeedFollow(context.Background(), feed_follow_params)
+	if err != nil {
+		log.Fatalf("error creating feed follow: %v", err)
+	}
+
+	fmt.Printf("current user %s successfully followed feed %s\n", created_feed.UserName, created_feed.FeedName)
+	return nil
+}
+
+func handlerFollowing(s *state, cmd command) error {
+	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
+	if err != nil {
+		log.Fatal("error fetching current user")
+	}
+
+	following_list, err := s.db.GetFeedFollowsForUser(context.Background(), curr_user.ID)
+	if err != nil {
+		log.Fatal("error fetching following list")
+	}
+
+	fmt.Printf("user %s's follow list:\n", curr_user.Name)
+	for _, followed_feed := range following_list {
+		fmt.Printf("* %s\n", followed_feed.FeedName)
 	}
 	return nil
 }

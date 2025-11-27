@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
@@ -35,10 +36,10 @@ func main() {
 	commandList.register("reset", handlerReset)
 	commandList.register("users", handlerUsers)
 	commandList.register("agg", handlerAgg)
-	commandList.register("addfeed", handlerAddFeed)
+	commandList.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	commandList.register("feeds", handlerFeeds)
-	commandList.register("follow", handlerFollow)
-	commandList.register("following", handlerFollowing)
+	commandList.register("follow", middlewareLoggedIn(handlerFollow))
+	commandList.register("following", middlewareLoggedIn(handlerFollowing))
 
 	curr_args := os.Args
 	if len(curr_args) < 2 {
@@ -60,4 +61,14 @@ func main() {
 	// configFile.SetUser("madrid")
 	// updatedConfig := config.Read()
 	// fmt.Println(updatedConfig)
+}
+
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
+		if err != nil {
+			log.Fatal("error fetching current user")
+		}
+		return handler(s, cmd, curr_user)
+	}
 }

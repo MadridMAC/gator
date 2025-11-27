@@ -92,17 +92,13 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, curr_user database.User) error {
 	if len(cmd.args) < 2 {
 		log.Fatal("error: insufficient arguments; expecting name and url argument")
 	}
-	// getting name, url, and current user id for user_id
+	// getting name and url
 	name_arg := cmd.args[0]
 	url_arg := cmd.args[1]
-	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
-	if err != nil {
-		log.Fatal("error fetching current user")
-	}
 
 	// building params in feedData to create new feed
 	feedData := database.CreateFeedParams{
@@ -153,9 +149,6 @@ func handlerFeeds(s *state, cmd command) error {
 
 	fmt.Println("List of Feeds:")
 	for _, feed := range all_feeds {
-		// feed_name := feed.Name
-		// feed_url := feed.Url
-
 		// fetch feed user's name via their user_id
 		feed_user, err := s.db.GetFeedUser(context.Background(), feed.UserID)
 		if err != nil {
@@ -167,14 +160,11 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, curr_user database.User) error {
 	if len(cmd.args) == 0 {
 		log.Fatal("error: expecting url argument")
 	}
-	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
-	if err != nil {
-		log.Fatal("error fetching current user")
-	}
+
 	feed_from_url, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
 	if err != nil {
 		log.Fatal("error fetching feed from provided URL")
@@ -196,12 +186,7 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	curr_user, err := s.db.GetUser(context.Background(), s.pointer.Current_user_name)
-	if err != nil {
-		log.Fatal("error fetching current user")
-	}
-
+func handlerFollowing(s *state, cmd command, curr_user database.User) error {
 	following_list, err := s.db.GetFeedFollowsForUser(context.Background(), curr_user.ID)
 	if err != nil {
 		log.Fatal("error fetching following list")

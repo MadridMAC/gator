@@ -198,3 +198,26 @@ func handlerFollowing(s *state, cmd command, curr_user database.User) error {
 	}
 	return nil
 }
+
+func handlerUnfollow(s *state, cmd command, curr_user database.User) error {
+	if len(cmd.args) == 0 {
+		log.Fatal("error: expecting url argument")
+	}
+
+	feed_from_url, err := s.db.GetFeedByUrl(context.Background(), cmd.args[0])
+	if err != nil {
+		log.Fatal("error fetching feed from given url")
+	}
+
+	unfollow_params := database.DeleteFeedFollowParams{
+		UserID: curr_user.ID,
+		FeedID: feed_from_url.ID,
+	}
+
+	unfollow_feed := s.db.DeleteFeedFollow(context.Background(), unfollow_params)
+	if unfollow_feed != nil {
+		log.Fatalf("error unfollowing feed: %v", unfollow_feed)
+	}
+
+	return nil
+}

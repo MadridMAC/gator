@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// usage: gator login [username]
+// Logs into another already-existing user in the database
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.args) != 1 {
 		log.Fatal("error: expecting single name argument")
@@ -30,6 +32,8 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
+// usage: gator register [username]
+// Registers a new user into the database and logs in as that user
 func handlerRegister(s *state, cmd command) error {
 	if len(cmd.args) != 1 {
 		log.Fatal("error: expecting single name argument")
@@ -59,6 +63,8 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
+// usage: gator reset
+// Resets the user table/database.
 func handlerReset(s *state, cmd command) error {
 	del_users := s.db.DeleteUsers(context.Background())
 	if del_users != nil {
@@ -67,6 +73,8 @@ func handlerReset(s *state, cmd command) error {
 	return nil
 }
 
+// usage: gator users
+// Shows a list of all users in the database, including the current/active user.
 func handlerUsers(s *state, cmd command) error {
 	user_list, err := s.db.GetUsers(context.Background())
 	if err != nil {
